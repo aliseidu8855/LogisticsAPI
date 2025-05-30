@@ -1,0 +1,29 @@
+
+# Core Django and DRF
+django
+djangorestframework
+
+# Database Connector (PostgreSQL)
+psycopg2-binary
+
+# JWT Authentication
+djangorestframework-simplejwt
+
+# Asynchronous Task Queue (for notifications, background jobs)
+celery
+redis # Common broker/backend for Celery, also useful for caching
+
+# Django Caching with Redis (if you choose Redis for caching)
+django-redis
+
+# Environment Variable Management
+python-dotenv
+
+# API Documentation (recommended)
+drf-yasg
+
+# WSGI HTTP Server (for deployment)
+gunicorn
+
+# Optional: For Celery monitoring (if you use Celery)
+# flower
