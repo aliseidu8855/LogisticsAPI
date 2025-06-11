@@ -2,6 +2,7 @@
 # Core Django and DRF
 django
 djangorestframework
+whitenoise
 
 # Database Connector (PostgreSQL)
 psycopg2-binary
