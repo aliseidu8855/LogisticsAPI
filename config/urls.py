@@ -1,4 +1,3 @@
-# logistics_project/urls.py
 from django.contrib import admin
 from django.urls import path, include, re_path
 from rest_framework import permissions
@@ -24,20 +23,18 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
-
-    path('api/users/', include('apps.users.urls')),
-    path('api/inventory/', include('apps.inventory.urls')),
-    path('api/containers/', include('apps.containers.urls')),
-    path('api/shipments/', include('apps.shipments.urls')),
-    path('api/deliveries/', include('apps.deliveries.urls')),
-    path('api/notifications/', include('apps.notifications.urls')),
-    path('api/audit/', include('apps.audit_logs.urls')),
-    
-     # Swagger UI:
+    path("admin/", admin.site.urls),
+    path("api/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("api/auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path("api/users/", include("apps.users.urls")),
+    path("api/inventory/", include("apps.inventory.urls")),
+    path("api/containers/", include("apps.containers.urls")),
+    path("api/shipments/", include("apps.shipments.urls")),
+    path("api/deliveries/", include("apps.deliveries.urls")),
+    path("api/notifications/", include("apps.notifications.urls")),
+    path("api/audit/", include("apps.audit_logs.urls")),
+    # Swagger UI:
     re_path(
         r"^swagger/$",
         schema_view.with_ui("swagger", cache_timeout=0),
@@ -53,5 +50,4 @@ urlpatterns = [
         schema_view.without_ui(cache_timeout=0),
         name="schema-json",
     ),
-
 ]

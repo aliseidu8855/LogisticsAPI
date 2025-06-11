@@ -16,6 +16,10 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         """
         This viewset should only return notifications for the currently authenticated user.
         """
+        
+        if getattr(self, 'swagger_fake_view', False):
+            # This is a workaround for Swagger UI to not fail on this viewset
+            return Notification.objects.none()
         user = self.request.user
         return Notification.objects.filter(
             recipient=user
