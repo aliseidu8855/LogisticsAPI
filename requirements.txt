@@ -24,6 +24,7 @@ drf-yasg
 
 # WSGI HTTP Server (for deployment)
 gunicorn
-
+# Database configuration
+dj_database_url
 # Optional: For Celery monitoring (if you use Celery)
 # flower

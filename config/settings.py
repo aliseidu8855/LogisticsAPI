@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from datetime import timedelta  # For JWT settings
 from dotenv import load_dotenv  # For .env file
+import dj_database_url  # For database URL parsing
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -96,14 +97,11 @@ if USE_SQLITE:
     }
 else:
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("DB_NAME", "logistics_db"),
-            "USER": os.getenv("DB_USER", "logistics_user"),
-            "PASSWORD": os.getenv("DB_PASSWORD", "your_db_password"),
-            "HOST": os.getenv("DB_HOST", "localhost"),
-            "PORT": os.getenv("DB_PORT", "5432"),
-        }
+        "default": dj_database_url.config(
+            default=os.getenv("DATABASE_URL")
+        )
+        
+        
     }
 
 
@@ -150,7 +148,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom User Model
-AUTH_USER_MODEL = "users.User"  # IMPORTANT for your custom user
+AUTH_USER_MODEL = "users.User" 
 
 # Django REST Framework settings
 REST_FRAMEWORK = {
