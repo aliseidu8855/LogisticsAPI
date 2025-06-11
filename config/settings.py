@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     # Third-party apps
     "rest_framework",
     "rest_framework_simplejwt",
-    "rest_framework_simplejwt.token_blacklist",  # If using refresh token blacklisting
+    "rest_framework_simplejwt.token_blacklist",
+    "corsheaders",  # For handling CORS
     "drf_yasg",  # For API documentation
     # Your apps (Make sure the AppConfig class names are correct)
     "apps.users.apps.UsersConfig",

@@ -3,6 +3,7 @@
 django
 djangorestframework
 whitenoise
+django-cors-headers
 
 # Database Connector (PostgreSQL)
 psycopg2-binary
