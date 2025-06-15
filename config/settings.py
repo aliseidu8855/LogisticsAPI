@@ -89,23 +89,29 @@ WSGI_APPLICATION = "config.wsgi.application"  # Changed from 'logistics_project.
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 
-USE_SQLITE = os.getenv("USE_SQLITE", "False").lower() == "true"
+# USE_SQLITE = os.getenv("USE_SQLITE", "False").lower() == "true"
 
-if USE_SQLITE:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-        }
-    }
-else:
-    DATABASES = {
-        "default": dj_database_url.config(
-            default=os.getenv("DATABASE_URL")
-        )
+# if USE_SQLITE:
+#     DATABASES = {
+#         "default": {
+#             "ENGINE": "django.db.backends.sqlite3",
+#             "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+#         }
+#     }
+# else:
+#     DATABASES = {
+#         "default": dj_database_url.config(
+#             default=os.getenv("DATABASE_URL")
+#         )
         
         
-    }
+#     }
+
+DATABASES = {
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL")
+    )
+}
 
 
 # Password validation
