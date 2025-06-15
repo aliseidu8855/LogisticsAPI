@@ -11,11 +11,11 @@ User = get_user_model()
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True, label="Confirm password")
-    role = serializers.ChoiceField(choices=UserRole.choices, default=UserRole.CUSTOMER)
+    # role = serializers.ChoiceField(choices=UserRole.choices, default=UserRole.CUSTOMER)
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'password', 'password2', 'role')
+        fields = ('id', 'email', 'first_name', 'last_name', 'phone_number', 'password', 'password2')
         extra_kwargs = {
             'first_name': {'required': False},
             'last_name': {'required': False},
