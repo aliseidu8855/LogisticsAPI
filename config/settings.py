@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",  # For handling CORS
     "drf_yasg",  # For API documentation
+    "django_filters",
     # Your apps (Make sure the AppConfig class names are correct)
     "apps.users.apps.UsersConfig",
     "apps.inventory.apps.InventoryConfig",
@@ -89,29 +90,29 @@ WSGI_APPLICATION = "config.wsgi.application"  # Changed from 'logistics_project.
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 
-# USE_SQLITE = os.getenv("USE_SQLITE", "False").lower() == "true"
+USE_SQLITE = os.getenv("USE_SQLITE", "False").lower() == "true"
 
-# if USE_SQLITE:
-#     DATABASES = {
-#         "default": {
-#             "ENGINE": "django.db.backends.sqlite3",
-#             "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-#         }
-#     }
-# else:
-#     DATABASES = {
-#         "default": dj_database_url.config(
-#             default=os.getenv("DATABASE_URL")
-#         )
+if USE_SQLITE:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        }
+    }
+else:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=os.getenv("DATABASE_URL")
+        )
         
         
-#     }
+    }
 
-DATABASES = {
-    "default": dj_database_url.config(
-        default=os.getenv("DATABASE_URL")
-    )
-}
+# DATABASES = {
+#     "default": dj_database_url.config(
+#         default=os.getenv("DATABASE_URL")
+#     )
+# }
 
 
 # Password validation
@@ -160,16 +161,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.User" 
 
 # Django REST Framework settings
+
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    'DEFAULT_AUTHENTICATION_CLASSES': ( 
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",  # Default to requiring authentication
+    'DEFAULT_PERMISSION_CLASSES': ( 
+        'rest_framework.permissions.AllowAny',
     ),
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 10,  # Adjust as needed
-    # 'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', # If using drf-spectacular
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
 }
 
 # Simple JWT settings

@@ -1,30 +1,40 @@
 from django.contrib import admin
-from .models import Container
+from .models import Container, ContainerCodeSequence
+
 
 @admin.register(Container)
 class ContainerAdmin(admin.ModelAdmin):
     list_display = (
-        'container_id_code', 'type', 'status', 'current_warehouse',
-        'assigned_customer', 'created_by', 'updated_at'
+        "container_id_code",
+        "type",
+        "status",
+        "current_warehouse",
+        "current_location_description",
+        "created_by",
+        "updated_at",
     )
-    list_filter = ('status', 'type', 'current_warehouse', 'assigned_customer')
+    list_filter = ("status", "type", "current_warehouse", "created_at")
     search_fields = (
-        'container_id_code', 'current_location_description',
-        'assigned_customer__email', 'created_by__email'
+        "container_id_code",
+        "current_location_description",
+        "created_by__email",
+        "current_warehouse__name",
     )
-    autocomplete_fields = ['current_warehouse', 'assigned_customer', 'created_by']
-    readonly_fields = ('created_at', 'updated_at')
+    autocomplete_fields = ["current_warehouse", "created_by"]
+    readonly_fields = ("container_id_code", "created_at", "updated_at")
     fieldsets = (
-        (None, {
-            'fields': ('container_id_code', 'type', 'status')
-        }),
-        ('Location & Assignment', {
-            'fields': ('current_location_description', 'current_warehouse', 'assigned_customer')
-        }),
-        ('Metadata', {
-            'fields': ('created_by', 'created_at', 'updated_at'),
-            'classes': ('collapse',) 
-        }),
+        (None, {"fields": ("container_id_code", "type", "status")}),
+        (
+            "Location Details",
+            {"fields": ("current_location_description", "current_warehouse")},
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("created_by", "created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
     )
 
     def save_model(self, request, obj, form, change):
@@ -32,6 +42,13 @@ class ContainerAdmin(admin.ModelAdmin):
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        return form
+
+@admin.register(ContainerCodeSequence)
+class ContainerCodeSequenceAdmin(admin.ModelAdmin):
+    list_display = ("id", "current_number")
+
+    def has_add_permission(self, request):
+        return not ContainerCodeSequence.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # Don't allow deletion
