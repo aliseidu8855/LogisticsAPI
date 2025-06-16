@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "rest_framework.authtoken",
+
     "corsheaders",  # For handling CORS
     "drf_yasg",  # For API documentation
     "django_filters",
@@ -50,6 +52,21 @@ INSTALLED_APPS = [
     "apps.deliveries.apps.DeliveriesConfig",
     "apps.notifications.apps.NotificationsConfig",
     "apps.audit_logs.apps.AuditLogsConfig",
+]
+
+# Allow CORS
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
 MIDDLEWARE = [
