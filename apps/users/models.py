@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
 class UserRole(models.TextChoices):
     WAREHOUSE_MANAGER = 'WM', _('Warehouse Manager')
     CUSTOMER = 'CU', _('Customer')

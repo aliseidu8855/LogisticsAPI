@@ -20,7 +20,7 @@ class ContainerViewSet(viewsets.ModelViewSet):
     serializer_class = ContainerSerializer  # Use the main serializer for all actions
 
     permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
-    # permissions_classes = [permissions.AllowAny]
+    # permission_classes = [permissions.AllowAny]
     # authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [
         DjangoFilterBackend,
