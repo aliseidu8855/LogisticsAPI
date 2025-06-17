@@ -4,7 +4,6 @@ from django.db import transaction
 from .models import Supplier, Warehouse, Product, ProductStock, ProductTransferLog
 from apps.users.serializers import UserSimpleSerializer
 from apps.containers.models import Container
-# Removed: from apps.containers.serializers import ContainerSerializer # To break circular import
 
 class SupplierSerializer(serializers.ModelSerializer):
     created_by = UserSimpleSerializer(read_only=True)

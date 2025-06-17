@@ -1,4 +1,3 @@
-# apps/containers/serializers.py
 from rest_framework import serializers
 from .models import Container
 from apps.users.serializers import UserSimpleSerializer
@@ -15,8 +14,7 @@ class ContainerSerializer(serializers.ModelSerializer):
         queryset=Warehouse.objects.all(),
         allow_null=True,
         required=False,
-        write_only=True, # Important: this field is now only for input
-        source='current_warehouse' # Explicitly link to model field for clarity
+        write_only=True,
     )
 
     class Meta:

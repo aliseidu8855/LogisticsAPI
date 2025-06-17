@@ -18,13 +18,16 @@ from apps.users.permissions import IsWarehouseManagerRole, IsAdminUserRole
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
-    permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    # permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    permission_classes = [IsAuthenticated]
+
 
 
 class WarehouseViewSet(viewsets.ModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
-    permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    # permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    permission_classes = [IsAuthenticated]
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -32,7 +35,9 @@ class ProductViewSet(viewsets.ModelViewSet):
         "supplier", "container", "created_by"
     ).all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+
 
     @action(
         detail=False,
@@ -61,7 +66,8 @@ class ProductStockViewSet(viewsets.ModelViewSet):
         "product", "warehouse", "product__supplier"
     ).all()
     serializer_class = ProductStockSerializer
-    permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    # permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    permission_classes = [IsAuthenticated]
 
 
 class ProductTransferLogViewSet(viewsets.ReadOnlyModelViewSet):
@@ -69,4 +75,5 @@ class ProductTransferLogViewSet(viewsets.ReadOnlyModelViewSet):
         "product", "from_warehouse", "to_warehouse", "transferred_by"
     ).all()
     serializer_class = ProductTransferLogSerializer
-    permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    # permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    permission_classes = [IsAuthenticated]
