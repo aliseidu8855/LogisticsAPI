@@ -1,4 +1,3 @@
-# config/settings.py
 
 import os
 from pathlib import Path
@@ -35,16 +34,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Third-party apps
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "rest_framework.authtoken",
 
-    "corsheaders",  # For handling CORS
-    "drf_yasg",  # For API documentation
+    "corsheaders",  
+    "drf_yasg",  
     "django_filters",
-    # Your apps (Make sure the AppConfig class names are correct)
     "apps.users.apps.UsersConfig",
     "apps.inventory.apps.InventoryConfig",
     "apps.containers.apps.ContainersConfig",

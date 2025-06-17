@@ -148,9 +148,6 @@ class ProductTransferActionSerializer(serializers.Serializer):
     product = serializers.PrimaryKeyRelatedField(
         queryset=Product.objects.all(), help_text="ID of the product to transfer."
     )
-    from_warehouse = serializers.PrimaryKeyRelatedField(
-        queryset=Warehouse.objects.all(), help_text="ID of the source warehouse."
-    )
     to_warehouse = serializers.PrimaryKeyRelatedField(
         queryset=Warehouse.objects.all(), help_text="ID of the destination warehouse."
     )
