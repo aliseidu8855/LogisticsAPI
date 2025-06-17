@@ -6,6 +6,7 @@ from rest_framework import generics, viewsets, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .serializers import (
     UserRegistrationSerializer,
@@ -14,6 +15,7 @@ from .serializers import (
 )
 from .permissions import CanManageUser, IsOwnerOrAdminOrSuperuser
 from .models import UserRole
+from django.contrib.auth import logout as django_logout
 
 User = get_user_model()
 
@@ -144,3 +146,11 @@ class UserViewSet(viewsets.ModelViewSet):
                 )
 
         serializer.save()
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        django_logout(request)
+        return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)

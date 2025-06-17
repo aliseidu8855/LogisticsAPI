@@ -178,7 +178,7 @@ class ProductTransferLog(models.Model):
 
     def __str__(self):
         return (
-            f"{self.quantity_transferred} of {self.product.sku} "
+            f"{self.quantity_transferred} of {self.product.name} "
             f"from {self.from_warehouse.name} to {self.to_warehouse.name} "
             f"at {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
         )
