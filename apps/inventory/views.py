@@ -55,7 +55,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer_class=ProductTransferActionSerializer,
         permission_classes=[
             IsAuthenticated,
-            IsWarehouseManagerRole | IsAdminUserRole,
         ],
     )
     def transfer_product_stock(self, request):
