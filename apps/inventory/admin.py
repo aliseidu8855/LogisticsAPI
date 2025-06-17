@@ -42,8 +42,22 @@ class WarehouseAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "sku", "supplier", "container", "created_by", "created_at")
-    search_fields = ("name", "sku", "container__container_id_code", "supplier__name")
+    list_display = (
+        "name",
+        "quantity",
+        "supplier",
+        "container",
+        "expected_revenue",
+        "total_cost_of_product",
+        "created_by",
+        "created_at",
+    )
+    search_fields = (
+        "name",
+        "quantity",
+        "container__container_id_code",
+        "supplier__name",
+    )
     list_filter = ("supplier", "container", "created_at")
     autocomplete_fields = ["supplier", "container"]
     readonly_fields = ("created_by", "created_at", "updated_at")

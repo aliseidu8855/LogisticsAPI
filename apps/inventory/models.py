@@ -57,15 +57,8 @@ class Warehouse(models.Model):
 
 class Product(models.Model):
     name = models.CharField(_("product name"), max_length=255)
-    sku = models.CharField(_("SKU (Stock Keeping Unit)"), max_length=100, unique=True)
+    quantity = models.IntegerField(_("quantity"), default=0)
     description = models.TextField(_("description"), blank=True)
-    cost_price = models.DecimalField(
-        _("cost price"), max_digits=10, decimal_places=2, default=0.00
-    )
-    selling_price = models.DecimalField(
-        _("selling price"), max_digits=10, decimal_places=2, default=0.00   
-    )
-    
     supplier = models.ForeignKey(
         Supplier,
         related_name="products",
@@ -83,6 +76,16 @@ class Product(models.Model):
         blank=True,
         verbose_name=_("container"),
     )
+    cost_of_product = models.DecimalField(
+        _("cost of product"),
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        help_text=_("Base cost of the product excluding selling costs."),
+    )
+    
+    def total_cost_of_product(self):
+        return self.quantity * self.cost_of_product
     
     selling_cost = models.DecimalField(
         _("selling cost"),
@@ -91,13 +94,10 @@ class Product(models.Model):
         default=0.00,
         help_text=_("Cost associated with selling this product, e.g., shipping, handling."),
     )
-    cost_of_product = models.DecimalField(
-        _("cost of product"),
-        max_digits=10,
-        decimal_places=2,
-        default=0.00,
-        help_text=_("Base cost of the product excluding selling costs."),
-    )
+    
+    def expected_revenue(self):
+        return self.quantity * self.selling_cost
+
     
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -110,16 +110,13 @@ class Product(models.Model):
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
-    def expected_revenue(self):
-        """Calculate the cost price including selling costs."""
-        return self.selling_cost - self.cost_of_product
     class Meta:
         verbose_name = _("product")
         verbose_name_plural = _("products")
-        ordering = ["name", "sku"]
+        ordering = ["name", "quantity"]
 
     def __str__(self):
-        return f"{self.name} ({self.sku})"
+        return f"{self.name} ({self.quantity})"
 
 
 class ProductStock(models.Model):

@@ -1,4 +1,5 @@
 from django.db import models, transaction
+from django.db.models import Sum, F, DecimalField
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
@@ -85,6 +86,73 @@ class Container(models.Model):
         ),
     )
 
+    def calculate_purchased_cost(self):
+        """
+        Calculate the sum of the cost_of_product for all products in this container.
+        """
+        aggregation = self.products.aggregate(
+         total_cost=Sum(F('quantity') * F('cost_of_product'), output_field=DecimalField())
+        )
+        return aggregation["total_cost"] or 0.00
+
+    def calculate_expected_revenue(self):
+        """
+        Calculate the sum of the selling_cost for all products in this container.
+        """
+        aggregation = self.products.aggregate(
+         total_cost=Sum(F('quantity') * F('selling_cost'), output_field=DecimalField())
+        )
+        return aggregation["total_cost"] or 0.00
+
+    bank_charges = models.DecimalField(
+        _("bank charges"),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_("Bank charges of the container."),
+    )
+    duty_and_ag_fess = models.DecimalField(
+        _("duty and AG fees"),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_("duty and AG fees of the container."),
+    )
+    transportation_fees = models.DecimalField(
+        _("Transportation fees"),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_("Transport of the container."),
+    )
+    discharge = models.DecimalField(
+        _("discharges"),
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_("discharge of the container."),
+    )
+
+    def expected_profit(self):
+        """
+        Calculate the expected profit for the container.
+        """
+        purchased_cost = self.calculate_purchased_cost()  
+        expected_revenue = self.calculate_expected_revenue() 
+
+        bank_charges = self.bank_charges or 0
+        duty_and_ag_fees = self.duty_and_ag_fess or 0
+        transportation_fees = self.transportation_fees or 0
+        discharge = self.discharge or 0
+
+        cost_of_goods = purchased_cost + bank_charges + duty_and_ag_fees + transportation_fees + discharge
+
+        return expected_revenue - cost_of_goods
+
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="created_containers",
@@ -95,19 +163,17 @@ class Container(models.Model):
     )
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
-    
-    
 
     class Meta:
         verbose_name = _("container")
         verbose_name_plural = _("containers")
         ordering = ["-updated_at", "container_id_code"]
 
-    def save(self, *args, **kwargs):
-        if not self.container_id_code:
-            next_number = ContainerCodeSequence.get_next_number()
-            self.container_id_code = f"#C-{next_number:05d}"
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if not self.container_id_code:
+    #         next_number = ContainerCodeSequence.get_next_number()
+    #         self.container_id_code = f"#C-{next_number:05d}"
+    #     super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.container_id_code} ({self.get_status_display()})"

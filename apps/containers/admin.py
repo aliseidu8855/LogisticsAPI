@@ -10,6 +10,9 @@ class ContainerAdmin(admin.ModelAdmin):
         "status",
         "current_warehouse",
         "current_location_description",
+        "calculate_purchased_cost",
+        "calculate_expected_revenue",
+        "expected_profit",
         "created_by",
         "updated_at",
     )
@@ -21,9 +24,22 @@ class ContainerAdmin(admin.ModelAdmin):
         "current_warehouse__name",
     )
     autocomplete_fields = ["current_warehouse", "created_by"]
-    readonly_fields = ("container_id_code", "created_at", "updated_at")
+    readonly_fields = ("created_at", "updated_at")
     fieldsets = (
-        (None, {"fields": ("container_id_code", "type", "status")}),
+        (
+            None,
+            {
+                "fields": (
+                    "container_id_code",
+                    "type",
+                    "status",
+                    "bank_charges",
+                    "duty_and_ag_fess",
+                    "transportation_fees",
+                    "discharge",
+                )
+            },
+        ),
         (
             "Location Details",
             {"fields": ("current_location_description", "current_warehouse")},

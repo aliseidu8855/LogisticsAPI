@@ -47,11 +47,13 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
-            'id', 'name', 'sku', 'description',
+            'id', 'name', 'quantity', 'description',
             'supplier_id', 'supplier', 
-            'selling_price', 'cost_price',
-            'container_id',      # For writing FK
-            'container_details', # For reading nested details (from method)
+            "expected_revenue",
+            'total_cost_of_product',
+            'expected_revenue', 
+            'container_id',     
+            'container_details', 
             'created_by', 'created_at', 'updated_at'
         )
         read_only_fields = ('created_at', 'updated_at', 'created_by', 'expected_revenue')
