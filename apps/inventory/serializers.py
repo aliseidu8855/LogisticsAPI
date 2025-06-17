@@ -2,8 +2,9 @@
 from rest_framework import serializers
 from django.db import transaction
 from .models import Supplier, Warehouse, Product, ProductStock, ProductTransferLog
-from apps.users.serializers import UserSimpleSerializer 
-from apps.users.models import User 
+from apps.users.serializers import UserSimpleSerializer
+from apps.containers.models import Container
+# Removed: from apps.containers.serializers import ContainerSerializer # To break circular import
 
 class SupplierSerializer(serializers.ModelSerializer):
     created_by = UserSimpleSerializer(read_only=True)
@@ -19,7 +20,6 @@ class SupplierSerializer(serializers.ModelSerializer):
 
 class WarehouseSerializer(serializers.ModelSerializer):
     created_by = UserSimpleSerializer(read_only=True)
-
     class Meta:
         model = Warehouse
         fields = '__all__'
@@ -33,16 +33,34 @@ class ProductSerializer(serializers.ModelSerializer):
     supplier_id = serializers.PrimaryKeyRelatedField(
         queryset=Supplier.objects.all(), source='supplier', write_only=True, allow_null=True, required=False
     )
-    supplier = SupplierSerializer(read_only=True) 
+    container_id = serializers.PrimaryKeyRelatedField(
+        queryset=Container.objects.all(), source='container', write_only=True, allow_null=True, required=False
+    )
+
+    supplier = SupplierSerializer(read_only=True)
+
+    # Using SerializerMethodField for nested container details to break circular import
+    container_details = serializers.SerializerMethodField(read_only=True)
+
     created_by = UserSimpleSerializer(read_only=True)
 
     class Meta:
         model = Product
         fields = (
-            'id', 'name', 'sku', 'description', 'supplier_id', 'supplier',
+            'id', 'name', 'sku', 'description',
+            'supplier_id', 'supplier',
+            'container_id',      # For writing FK
+            'container_details', # For reading nested details (from method)
             'created_by', 'created_at', 'updated_at'
         )
         read_only_fields = ('created_at', 'updated_at', 'created_by')
+
+    def get_container_details(self, obj):
+        if obj.container:
+            # Local import to avoid circular dependency at module load time
+            from apps.containers.serializers import ContainerSerializer
+            return ContainerSerializer(obj.container, context=self.context).data
+        return None
 
     def create(self, validated_data):
         validated_data['created_by'] = self.context['request'].user
@@ -61,7 +79,7 @@ class ProductStockSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductStock
         fields = ('id', 'product_id', 'warehouse_id', 'product', 'warehouse', 'quantity', 'last_updated')
-        read_only_fields = ('last_updated',) 
+        read_only_fields = ('last_updated',)
 
 class ProductTransferLogSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
@@ -71,7 +89,7 @@ class ProductTransferLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductTransferLog
-        fields = '__all__' 
+        fields = '__all__'
 
 class ProductTransferActionSerializer(serializers.Serializer):
     product_id = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), help_text="ID of the product to transfer.")
@@ -81,12 +99,12 @@ class ProductTransferActionSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True, help_text="Optional notes for the transfer.")
 
     def validate_from_warehouse_id(self, value):
-        if not value:
+        if not value: # This check might be redundant if PrimaryKeyRelatedField handles it
             raise serializers.ValidationError("Source warehouse not found.")
         return value
 
     def validate_to_warehouse_id(self, value):
-        if not value:
+        if not value: # This check might be redundant
             raise serializers.ValidationError("Destination warehouse not found.")
         return value
 
@@ -122,6 +140,7 @@ class ProductTransferActionSerializer(serializers.Serializer):
         user = self.context['request'].user
 
         with transaction.atomic():
+            # Ensure we lock the rows for update to prevent race conditions
             source_stock = ProductStock.objects.select_for_update().get(product=product, warehouse=from_warehouse)
             source_stock.quantity -= quantity
             source_stock.save()

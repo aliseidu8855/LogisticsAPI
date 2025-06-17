@@ -18,8 +18,9 @@ from apps.inventory.models import Warehouse
 class ContainerViewSet(viewsets.ModelViewSet):
     queryset = Container.objects.select_related("current_warehouse", "created_by").all()
     serializer_class = ContainerSerializer  # Use the main serializer for all actions
+    permission_classes = [IsAuthenticated]
 
-    permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
+    # permission_classes = [IsAuthenticated, IsAdminUserRole | IsWarehouseManagerRole]
     # permission_classes = [permissions.AllowAny]
     # authentication_classes = [TokenAuthentication, SessionAuthentication]
     filter_backends = [
