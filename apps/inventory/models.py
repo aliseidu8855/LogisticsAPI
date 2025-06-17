@@ -87,7 +87,7 @@ class Product(models.Model):
     def total_cost_of_product(self):
         return self.quantity * self.cost_of_product
     
-    selling_cost = models.DecimalField(
+    selling_price = models.DecimalField(
         _("selling cost"),
         max_digits=10,
         decimal_places=2,
@@ -96,7 +96,7 @@ class Product(models.Model):
     )
     
     def expected_revenue(self):
-        return self.quantity * self.selling_cost
+        return self.quantity * self.selling_price
 
     
     created_by = models.ForeignKey(

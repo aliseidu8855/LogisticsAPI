@@ -63,7 +63,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "supplier_id",
             "supplier",
             "cost_of_product",
-            "selling_cost",
+            "selling_price",
             "total_cost_of_product",
             "expected_revenue",
             "container_id",
@@ -181,7 +181,6 @@ class ProductTransferActionSerializer(serializers.Serializer):
 
     def validate(self, data):
         product_obj = data.get("product")
-        quantity_to_transfer = data.get("quantity")
         # Get from_warehouse from product's container's current_warehouse
         from_warehouse_obj = None
         if product_obj and product_obj.container and product_obj.container.current_warehouse:
@@ -193,24 +192,6 @@ class ProductTransferActionSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {
                     "to_warehouse": "Source and destination warehouses cannot be the same."
-                }
-            )
-        try:
-            source_stock = ProductStock.objects.get(
-                product=product_obj, warehouse=from_warehouse_obj
-            )
-            if source_stock.quantity < quantity_to_transfer:
-                raise serializers.ValidationError(
-                    {
-                        "quantity": f"Insufficient stock for product '{product_obj.name}' in warehouse '{from_warehouse_obj.name}'. "
-                        f"Available: {source_stock.quantity}, Requested: {quantity_to_transfer}."
-                    }
-                )
-        except ProductStock.DoesNotExist:
-            raise serializers.ValidationError(
-                {
-                    "from_warehouse": f"No stock record found for product '{product_obj.name}' in source warehouse '{from_warehouse_obj.name}'. "
-                    f"Cannot transfer if product has no stock history there."
                 }
             )
         data["from_warehouse"] = from_warehouse_obj  # Pass to save()
@@ -225,30 +206,13 @@ class ProductTransferActionSerializer(serializers.Serializer):
         description_text = validated_data.get("description", "")
         user = self.context["request"].user
 
-        with transaction.atomic():
-            source_stock = ProductStock.objects.select_for_update().get(
-                product=product_obj, warehouse=from_warehouse_obj
-            )
-            source_stock.quantity -= quantity_transferred
-            source_stock.save()
-
-            (
-                dest_stock,
-                created,
-            ) = ProductStock.objects.select_for_update().get_or_create(
-                product=product_obj,
-                warehouse=to_warehouse_obj,
-                defaults={"quantity": 0},
-            )
-            dest_stock.quantity += quantity_transferred
-            dest_stock.save()
-
-            log_entry = ProductTransferLog.objects.create(
-                product=product_obj,
-                quantity_transferred=quantity_transferred,
-                from_warehouse=from_warehouse_obj,
-                to_warehouse=to_warehouse_obj,
-                transferred_by=user,
-                description=description_text,
-            )
-            return log_entry
+        # Only log the transfer, do not check or update ProductStock
+        log_entry = ProductTransferLog.objects.create(
+            product=product_obj,
+            quantity_transferred=quantity_transferred,
+            from_warehouse=from_warehouse_obj,
+            to_warehouse=to_warehouse_obj,
+            transferred_by=user,
+            description=description_text,
+        )
+        return log_entry
