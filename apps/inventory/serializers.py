@@ -167,11 +167,6 @@ class ProductTransferActionSerializer(serializers.Serializer):
             raise serializers.ValidationError("Product not found.")
         return value
 
-    def validate_from_warehouse(self, value):
-        if not value:
-            raise serializers.ValidationError("Source warehouse not found.")
-        return value
-
     def validate_to_warehouse(self, value):
         if not value:
             raise serializers.ValidationError("Destination warehouse not found.")
@@ -185,18 +180,21 @@ class ProductTransferActionSerializer(serializers.Serializer):
         return value
 
     def validate(self, data):
-        from_warehouse_obj = data.get("from_warehouse")
-        to_warehouse_obj = data.get("to_warehouse")
         product_obj = data.get("product")
         quantity_to_transfer = data.get("quantity")
-
+        # Get from_warehouse from product's container's current_warehouse
+        from_warehouse_obj = None
+        if product_obj and product_obj.container and product_obj.container.current_warehouse:
+            from_warehouse_obj = product_obj.container.current_warehouse
+        else:
+            raise serializers.ValidationError({"product": "Product is not in a container with a warehouse."})
+        to_warehouse_obj = data.get("to_warehouse")
         if from_warehouse_obj == to_warehouse_obj:
             raise serializers.ValidationError(
                 {
                     "to_warehouse": "Source and destination warehouses cannot be the same."
                 }
             )
-
         try:
             source_stock = ProductStock.objects.get(
                 product=product_obj, warehouse=from_warehouse_obj
@@ -215,6 +213,7 @@ class ProductTransferActionSerializer(serializers.Serializer):
                     f"Cannot transfer if product has no stock history there."
                 }
             )
+        data["from_warehouse"] = from_warehouse_obj  # Pass to save()
         return data
 
     def save(self):
@@ -227,7 +226,6 @@ class ProductTransferActionSerializer(serializers.Serializer):
         user = self.context["request"].user
 
         with transaction.atomic():
-
             source_stock = ProductStock.objects.select_for_update().get(
                 product=product_obj, warehouse=from_warehouse_obj
             )
