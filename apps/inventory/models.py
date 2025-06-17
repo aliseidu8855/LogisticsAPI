@@ -182,3 +182,8 @@ class ProductTransferLog(models.Model):
             f"from {self.from_warehouse.name} to {self.to_warehouse.name} "
             f"at {self.timestamp.strftime('%Y-%m-%d %H:%M')}"
         )
+    
+    def save(self, *args, **kwargs):
+        if self.product and hasattr(self.product, 'container') and self.product.container and self.product.container.current_warehouse:
+            self.from_warehouse = self.product.container.current_warehouse
+        super().save(*args, **kwargs)
