@@ -96,15 +96,6 @@ class Container(models.Model):
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
     
-    def total_expected_revenue(self):
-        return sum(carton.total_price() for carton in self.cartons.all())
-
-    def total_cost(self):
-        return sum(cost.amount for cost in self.cost_items.all())
-
-    def expected_profit(self):
-        return self.total_expected_revenue() - self.total_cost()
-    
     
 
     class Meta:

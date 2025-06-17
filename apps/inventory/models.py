@@ -83,6 +83,22 @@ class Product(models.Model):
         blank=True,
         verbose_name=_("container"),
     )
+    
+    selling_cost = models.DecimalField(
+        _("selling cost"),
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        help_text=_("Cost associated with selling this product, e.g., shipping, handling."),
+    )
+    cost_of_product = models.DecimalField(
+        _("cost of product"),
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        help_text=_("Base cost of the product excluding selling costs."),
+    )
+    
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="created_products",
@@ -94,6 +110,9 @@ class Product(models.Model):
     created_at = models.DateTimeField(_("created at"), auto_now_add=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
+    def expected_revenue(self):
+        """Calculate the cost price including selling costs."""
+        return self.selling_cost - self.cost_of_product
     class Meta:
         verbose_name = _("product")
         verbose_name_plural = _("products")
