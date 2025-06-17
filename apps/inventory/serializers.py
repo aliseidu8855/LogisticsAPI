@@ -1,44 +1,54 @@
-# apps/inventory/serializers.py
 from rest_framework import serializers
 from django.db import transaction
-from .models import Supplier, Warehouse, Product, ProductStock
+from .models import Supplier, Warehouse, Product, ProductStock, ProductTransferLog
 from apps.users.serializers import UserSimpleSerializer
 from apps.containers.models import Container
+
 
 class SupplierSerializer(serializers.ModelSerializer):
     created_by = UserSimpleSerializer(read_only=True)
 
     class Meta:
         model = Supplier
-        fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at', 'created_by')
+        fields = "__all__"
+        read_only_fields = ("created_at", "updated_at", "created_by")
 
     def create(self, validated_data):
-        validated_data['created_by'] = self.context['request'].user
+        validated_data["created_by"] = self.context["request"].user
         return super().create(validated_data)
+
 
 class WarehouseSerializer(serializers.ModelSerializer):
     created_by = UserSimpleSerializer(read_only=True)
+
     class Meta:
         model = Warehouse
-        fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at', 'created_by')
+        fields = "__all__"
+        read_only_fields = ("created_at", "updated_at", "created_by")
 
     def create(self, validated_data):
-        validated_data['created_by'] = self.context['request'].user
+        validated_data["created_by"] = self.context["request"].user
         return super().create(validated_data)
+
 
 class ProductSerializer(serializers.ModelSerializer):
     supplier_id = serializers.PrimaryKeyRelatedField(
-        queryset=Supplier.objects.all(), source='supplier', write_only=True, allow_null=True, required=False
+        queryset=Supplier.objects.all(),
+        source="supplier",
+        write_only=True,
+        allow_null=True,
+        required=False,
     )
     container_id = serializers.PrimaryKeyRelatedField(
-        queryset=Container.objects.all(), source='container', write_only=True, allow_null=True, required=False
+        queryset=Container.objects.all(),
+        source="container",
+        write_only=True,
+        allow_null=True,
+        required=False,
     )
 
     supplier = SupplierSerializer(read_only=True)
 
-    # Using SerializerMethodField for nested container details to break circular import
     container_details = serializers.SerializerMethodField(read_only=True)
 
     created_by = UserSimpleSerializer(read_only=True)
@@ -46,95 +56,204 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
-            'id', 'name', 'quantity', 'description',
-            'supplier_id', 'supplier', 
+            "id",
+            "name",
+            "quantity",
+            "description",
+            "supplier_id",
+            "supplier",
             "cost_of_product",
             "selling_cost",
-            'total_cost_of_product',
-            'expected_revenue', 
-            'container_id',     
-            'container_details', 
-            'created_by', 'created_at', 'updated_at'
+            "total_cost_of_product",
+            "expected_revenue",
+            "container_id",
+            "container_details",
+            "created_by",
+            "created_at",
+            "updated_at",
         )
-        read_only_fields = ('created_at', 'updated_at', 'created_by', 'expected_revenue')
+        read_only_fields = (
+            "created_at",
+            "updated_at",
+            "created_by",
+            "expected_revenue",
+        )
 
     def get_container_details(self, obj):
         if obj.container:
-            # Local import to avoid circular dependency at module load time
             from apps.containers.serializers import ContainerSerializer
+
             return ContainerSerializer(obj.container, context=self.context).data
         return None
 
     def create(self, validated_data):
-        validated_data['created_by'] = self.context['request'].user
+        validated_data["created_by"] = self.context["request"].user
         return super().create(validated_data)
 
-class ProductTransferActionSerializer(serializers.Serializer):
-    product_id = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), help_text="ID of the product to transfer.")
-    from_warehouse_id = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), help_text="ID of the source warehouse.")
-    to_warehouse_id = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), help_text="ID of the destination warehouse.")
 
-    def validate_from_warehouse_id(self, value):
-        if not value: # This check might be redundant if PrimaryKeyRelatedField handles it
+class ProductStockSerializer(serializers.ModelSerializer):
+    product_id = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(), source="product", write_only=True
+    )
+    warehouse_id = serializers.PrimaryKeyRelatedField(
+        queryset=Warehouse.objects.all(), source="warehouse", write_only=True
+    )
+    product = ProductSerializer(read_only=True)
+    warehouse = WarehouseSerializer(read_only=True)
+
+    class Meta:
+        model = ProductStock
+        fields = (
+            "id",
+            "product_id",
+            "warehouse_id",
+            "product",
+            "warehouse",
+            "quantity",
+            "last_updated",
+        )
+        read_only_fields = ("last_updated",)
+
+
+class ProductTransferLogSerializer(serializers.ModelSerializer):
+    product_details = ProductSerializer(source="product", read_only=True)
+    from_warehouse_details = WarehouseSerializer(
+        source="from_warehouse", read_only=True
+    )
+    to_warehouse_details = WarehouseSerializer(source="to_warehouse", read_only=True)
+    transferred_by_details = UserSimpleSerializer(
+        source="transferred_by", read_only=True
+    )
+
+    class Meta:
+        model = ProductTransferLog
+        fields = (
+            "id",
+            "product",
+            "product_details",
+            "quantity_transferred",
+            "from_warehouse",
+            "from_warehouse_details",
+            "to_warehouse",
+            "to_warehouse_details",
+            "transferred_by",
+            "transferred_by_details",
+            "timestamp",
+            "description",
+        )
+        read_only_fields = fields
+
+
+class ProductTransferActionSerializer(serializers.Serializer):
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all(), help_text="ID of the product to transfer."
+    )
+    from_warehouse = serializers.PrimaryKeyRelatedField(
+        queryset=Warehouse.objects.all(), help_text="ID of the source warehouse."
+    )
+    to_warehouse = serializers.PrimaryKeyRelatedField(
+        queryset=Warehouse.objects.all(), help_text="ID of the destination warehouse."
+    )
+    quantity = serializers.IntegerField(
+        min_value=1, help_text="Quantity of the product to transfer."
+    )
+    description = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        style={"base_template": "textarea.html"},
+        help_text="Description or reason for the transfer.",
+    )
+
+    def validate_product(self, value):
+        if not value:
+            raise serializers.ValidationError("Product not found.")
+        return value
+
+    def validate_from_warehouse(self, value):
+        if not value:
             raise serializers.ValidationError("Source warehouse not found.")
         return value
 
-    def validate_to_warehouse_id(self, value):
-        if not value: # This check might be redundant
+    def validate_to_warehouse(self, value):
+        if not value:
             raise serializers.ValidationError("Destination warehouse not found.")
         return value
 
-    def validate(self, data):
-        from_warehouse = data['from_warehouse_id']
-        to_warehouse = data['to_warehouse_id']
-        product = data['product_id']
-        quantity_to_transfer = data['quantity']
+    def validate_quantity(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Quantity to transfer must be greater than zero."
+            )
+        return value
 
-        if from_warehouse == to_warehouse:
-            raise serializers.ValidationError("Source and destination warehouses cannot be the same.")
+    def validate(self, data):
+        from_warehouse_obj = data.get("from_warehouse")
+        to_warehouse_obj = data.get("to_warehouse")
+        product_obj = data.get("product")
+        quantity_to_transfer = data.get("quantity")
+
+        if from_warehouse_obj == to_warehouse_obj:
+            raise serializers.ValidationError(
+                {
+                    "to_warehouse": "Source and destination warehouses cannot be the same."
+                }
+            )
 
         try:
-            source_stock = ProductStock.objects.get(product=product, warehouse=from_warehouse)
+            source_stock = ProductStock.objects.get(
+                product=product_obj, warehouse=from_warehouse_obj
+            )
             if source_stock.quantity < quantity_to_transfer:
                 raise serializers.ValidationError(
-                    f"Insufficient stock for product '{product.name}' in warehouse '{from_warehouse.name}'. "
-                    f"Available: {source_stock.quantity}, Requested: {quantity_to_transfer}."
+                    {
+                        "quantity": f"Insufficient stock for product '{product_obj.name}' in warehouse '{from_warehouse_obj.name}'. "
+                        f"Available: {source_stock.quantity}, Requested: {quantity_to_transfer}."
+                    }
                 )
         except ProductStock.DoesNotExist:
             raise serializers.ValidationError(
-                f"Product '{product.name}' not found or no stock record in source warehouse '{from_warehouse.name}'."
+                {
+                    "from_warehouse": f"No stock record found for product '{product_obj.name}' in source warehouse '{from_warehouse_obj.name}'. "
+                    f"Cannot transfer if product has no stock history there."
+                }
             )
         return data
 
     def save(self):
         validated_data = self.validated_data
-        product = validated_data['product_id']
-        from_warehouse = validated_data['from_warehouse_id']
-        to_warehouse = validated_data['to_warehouse_id']
-        quantity = validated_data['quantity']
-        notes = validated_data.get('notes', '')
-        user = self.context['request'].user
+        product_obj = validated_data["product"]
+        from_warehouse_obj = validated_data["from_warehouse"]
+        to_warehouse_obj = validated_data["to_warehouse"]
+        quantity_transferred = validated_data["quantity"]
+        description_text = validated_data.get("description", "")
+        user = self.context["request"].user
 
         with transaction.atomic():
-            # Ensure we lock the rows for update to prevent race conditions
-            source_stock = ProductStock.objects.select_for_update().get(product=product, warehouse=from_warehouse)
-            source_stock.quantity -= quantity
+
+            source_stock = ProductStock.objects.select_for_update().get(
+                product=product_obj, warehouse=from_warehouse_obj
+            )
+            source_stock.quantity -= quantity_transferred
             source_stock.save()
 
-            dest_stock, created = ProductStock.objects.select_for_update().get_or_create(
-                product=product,
-                warehouse=to_warehouse,
-                defaults={'quantity': 0}
+            (
+                dest_stock,
+                created,
+            ) = ProductStock.objects.select_for_update().get_or_create(
+                product=product_obj,
+                warehouse=to_warehouse_obj,
+                defaults={"quantity": 0},
             )
-            dest_stock.quantity += quantity
+            dest_stock.quantity += quantity_transferred
             dest_stock.save()
 
             log_entry = ProductTransferLog.objects.create(
-                product=product,
-                quantity=quantity,
-                from_warehouse=from_warehouse,
-                to_warehouse=to_warehouse,
+                product=product_obj,
+                quantity_transferred=quantity_transferred,
+                from_warehouse=from_warehouse_obj,
+                to_warehouse=to_warehouse_obj,
                 transferred_by=user,
-                notes=notes
+                description=description_text,
             )
             return log_entry

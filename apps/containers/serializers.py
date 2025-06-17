@@ -65,6 +65,7 @@ class ProductLinkedToContainer(serializers.ModelSerializer):
             "container_details",
             "expected_revenue",
             "total_cost_of_product",
+            "expected_profit",
             "created_at",
             "updated_at"
         )
