@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Supplier, Warehouse, Product, ProductStock, ProductTransferLog
+from .models import Supplier, Warehouse, Product
 
 
 @admin.register(Supplier)
@@ -44,22 +44,13 @@ class WarehouseAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = (
         "name",
-        "quantity",
         "supplier",
         "container",
-        "expected_revenue",
-        "total_cost_of_product",
         "created_by",
         "created_at",
     )
-    search_fields = (
-        "name",
-        "quantity",
-        "container__container_id_code",
-        "supplier__name",
-    )
-    list_filter = ("supplier", "container", "created_at")
-    autocomplete_fields = ["supplier", "container"]
+    search_fields = ("name", "supplier__name", "container__name")
+    list_filter = ("created_at", "supplier")
     readonly_fields = ("created_by", "created_at", "updated_at")
 
     def save_model(self, request, obj, form, change):
@@ -68,45 +59,4 @@ class ProductAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
-@admin.register(ProductStock)
-class ProductStockAdmin(admin.ModelAdmin):
-    list_display = ("product", "warehouse", "quantity", "last_updated")
-    search_fields = ("product__name", "product__sku", "warehouse__name")
-    list_filter = ("warehouse", "last_updated")
-    autocomplete_fields = ["product", "warehouse"]
-    readonly_fields = ("last_updated",)
 
-
-@admin.register(ProductTransferLog)
-class ProductTransferLogAdmin(admin.ModelAdmin):
-    list_display = (
-        "product",
-        "quantity",
-        "from_warehouse",
-        "to_warehouse",
-        "transferred_by",
-        "timestamp",
-    )
-    search_fields = (
-        "product__sku",
-        "from_warehouse__name",
-        "to_warehouse__name",
-        "transferred_by__email",
-    )
-    list_filter = ("timestamp", "transferred_by", "from_warehouse", "to_warehouse")
-    readonly_fields = (
-        "product",
-        "quantity",
-        "from_warehouse",
-        "to_warehouse",
-        "transferred_by",
-        "timestamp",
-        "notes",
-    )
-    date_hierarchy = "timestamp"
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        return False

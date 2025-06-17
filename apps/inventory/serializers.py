@@ -1,7 +1,7 @@
 # apps/inventory/serializers.py
 from rest_framework import serializers
 from django.db import transaction
-from .models import Supplier, Warehouse, Product, ProductStock, ProductTransferLog
+from .models import Supplier, Warehouse, Product, ProductStock
 from apps.users.serializers import UserSimpleSerializer
 from apps.containers.models import Container
 
@@ -48,7 +48,8 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'quantity', 'description',
             'supplier_id', 'supplier', 
-            "expected_revenue",
+            "cost_of_product",
+            "selling_cost",
             'total_cost_of_product',
             'expected_revenue', 
             'container_id',     
@@ -68,37 +69,10 @@ class ProductSerializer(serializers.ModelSerializer):
         validated_data['created_by'] = self.context['request'].user
         return super().create(validated_data)
 
-class ProductStockSerializer(serializers.ModelSerializer):
-    product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(), source='product', write_only=True
-    )
-    warehouse_id = serializers.PrimaryKeyRelatedField(
-        queryset=Warehouse.objects.all(), source='warehouse', write_only=True
-    )
-    product = ProductSerializer(read_only=True)
-    warehouse = WarehouseSerializer(read_only=True)
-
-    class Meta:
-        model = ProductStock
-        fields = ('id', 'product_id', 'warehouse_id', 'product', 'warehouse', 'quantity', 'last_updated')
-        read_only_fields = ('last_updated',)
-
-class ProductTransferLogSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
-    from_warehouse = WarehouseSerializer(read_only=True)
-    to_warehouse = WarehouseSerializer(read_only=True)
-    transferred_by = UserSimpleSerializer(read_only=True)
-
-    class Meta:
-        model = ProductTransferLog
-        fields = '__all__'
-
 class ProductTransferActionSerializer(serializers.Serializer):
     product_id = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all(), help_text="ID of the product to transfer.")
     from_warehouse_id = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), help_text="ID of the source warehouse.")
     to_warehouse_id = serializers.PrimaryKeyRelatedField(queryset=Warehouse.objects.all(), help_text="ID of the destination warehouse.")
-    quantity = serializers.IntegerField(min_value=1, help_text="Quantity of the product to transfer.")
-    notes = serializers.CharField(required=False, allow_blank=True, help_text="Optional notes for the transfer.")
 
     def validate_from_warehouse_id(self, value):
         if not value: # This check might be redundant if PrimaryKeyRelatedField handles it

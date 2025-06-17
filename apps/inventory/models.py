@@ -143,38 +143,3 @@ class ProductStock(models.Model):
 
     def __str__(self):
         return f"{self.product.name} in {self.warehouse.name}: {self.quantity}"
-
-
-class ProductTransferLog(models.Model):
-    product = models.ForeignKey(
-        Product, on_delete=models.PROTECT, verbose_name=_("product")
-    )
-    quantity = models.PositiveIntegerField(_("quantity transferred"))
-    from_warehouse = models.ForeignKey(
-        Warehouse,
-        related_name="transfers_out",
-        on_delete=models.PROTECT,
-        verbose_name=_("from warehouse"),
-    )
-    to_warehouse = models.ForeignKey(
-        Warehouse,
-        related_name="transfers_in",
-        on_delete=models.PROTECT,
-        verbose_name=_("to warehouse"),
-    )
-    transferred_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        verbose_name=_("transferred by"),
-    )
-    timestamp = models.DateTimeField(_("timestamp"), auto_now_add=True)
-    notes = models.TextField(_("notes"), blank=True)
-
-    class Meta:
-        verbose_name = _("product transfer log")
-        verbose_name_plural = _("product transfer logs")
-        ordering = ["-timestamp"]
-
-    def __str__(self):
-        return f"{self.quantity} of {self.product.sku} from {self.from_warehouse.name} to {self.to_warehouse.name} at {self.timestamp}"

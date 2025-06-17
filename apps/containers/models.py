@@ -2,6 +2,7 @@ from django.db import models, transaction
 from django.db.models import Sum, F, DecimalField
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+from decimal import Decimal  
 
 
 class ContainerCodeSequence(models.Model):
@@ -89,20 +90,25 @@ class Container(models.Model):
     def calculate_purchased_cost(self):
         """
         Calculate the sum of the cost_of_product for all products in this container.
+        Ensures the return type is Decimal.
         """
-        aggregation = self.products.aggregate(
-         total_cost=Sum(F('quantity') * F('cost_of_product'), output_field=DecimalField())
-        )
-        return aggregation["total_cost"] or 0.00
+        aggregation = self.products.aggregate(total_cost=Sum("cost_of_product"))
+        total_cost_value = aggregation["total_cost"]
+        if total_cost_value is None:
+            return Decimal("0.00")
+        # Explicitly convert to Decimal, handling potential float from aggregation
+        return Decimal(str(total_cost_value))
 
     def calculate_expected_revenue(self):
         """
         Calculate the sum of the selling_cost for all products in this container.
+        Ensures the return type is Decimal.
         """
-        aggregation = self.products.aggregate(
-         total_cost=Sum(F('quantity') * F('selling_cost'), output_field=DecimalField())
-        )
-        return aggregation["total_cost"] or 0.00
+        aggregation = self.products.aggregate(total_revenue=Sum("selling_cost"))
+        total_revenue_value = aggregation["total_revenue"]
+        if total_revenue_value is None:
+            return Decimal("0.00")
+        return Decimal(str(total_revenue_value))
 
     bank_charges = models.DecimalField(
         _("bank charges"),
@@ -137,20 +143,24 @@ class Container(models.Model):
         help_text=_("discharge of the container."),
     )
 
+
     def expected_profit(self):
         """
         Calculate the expected profit for the container.
+        All monetary values are handled as Decimals.
         """
         purchased_cost = self.calculate_purchased_cost()  
-        expected_revenue = self.calculate_expected_revenue() 
-
-        bank_charges = self.bank_charges or 0
-        duty_and_ag_fees = self.duty_and_ag_fess or 0
-        transportation_fees = self.transportation_fees or 0
-        discharge = self.discharge or 0
-
+        expected_revenue = self.calculate_expected_revenue()  
+        bank_charges = Decimal(str(self.bank_charges)) if self.bank_charges is not None else Decimal("0.00")
+        duty_and_ag_fees_val = self.duty_and_ag_fess  
+        duty_and_ag_fees = Decimal(str(duty_and_ag_fees_val)) if duty_and_ag_fees_val is not None else Decimal(
+            "0.00"
+        )
+        transportation_fees = Decimal(str(self.transportation_fees)) if self.transportation_fees is not None else Decimal(
+            "0.00"
+        )
+        discharge = Decimal(str(self.discharge)) if self.discharge is not None else Decimal("0.00")
         cost_of_goods = purchased_cost + bank_charges + duty_and_ag_fees + transportation_fees + discharge
-
         return expected_revenue - cost_of_goods
 
     created_by = models.ForeignKey(

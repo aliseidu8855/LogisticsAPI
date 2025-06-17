@@ -35,6 +35,7 @@ urlpatterns = [
     path("api/deliveries/", include("apps.deliveries.urls")),
     path("api/notifications/", include("apps.notifications.urls")),
     path("api/audit/", include("apps.audit_logs.urls")),
+    # path("api/transfer/", include("apps.transfer.urls")),
     # Swagger UI:
     re_path(
         r"^swagger/$",

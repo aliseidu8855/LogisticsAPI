@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "apps.shipments.apps.ShipmentsConfig",
     "apps.deliveries.apps.DeliveriesConfig",
     "apps.notifications.apps.NotificationsConfig",
+    # "apps.transfer.apps.TransferConfig",
     "apps.audit_logs.apps.AuditLogsConfig",
 ]
 
