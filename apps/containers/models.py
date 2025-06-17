@@ -101,10 +101,10 @@ class Container(models.Model):
 
     def calculate_expected_revenue(self):
         """
-        Calculate the sum of the selling_cost for all products in this container.
+        Calculate the sum of the selling_price for all products in this container.
         Ensures the return type is Decimal.
         """
-        aggregation = self.products.aggregate(total_revenue=Sum("selling_cost"))
+        aggregation = self.products.aggregate(total_revenue=Sum("selling_price"))
         total_revenue_value = aggregation["total_revenue"]
         if total_revenue_value is None:
             return Decimal("0.00")
