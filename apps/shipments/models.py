@@ -103,6 +103,3 @@ class ShipmentItem(models.Model):
         verbose_name = _("shipment item")
         verbose_name_plural = _("shipment items")
         unique_together = ('shipment', 'product') 
-
-    def __str__(self):
-        return f"{self.quantity} of {self.product.sku} for {self.shipment.shipment_tracking_id}"

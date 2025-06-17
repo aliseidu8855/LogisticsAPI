@@ -82,7 +82,6 @@ class ProductViewSet(viewsets.ModelViewSet):
                     related_object=log_entry,
                     details={
                         "product_id": log_entry.product.id,
-                        "product_sku": log_entry.product.sku,
                         "quantity": log_entry.quantity_transferred,
                         "from_warehouse": log_entry.from_warehouse.name,
                         "to_warehouse": log_entry.to_warehouse.name,
